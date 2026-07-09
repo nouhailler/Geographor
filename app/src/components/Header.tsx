@@ -19,6 +19,7 @@ interface Props {
   onBurger: () => void
   onReset: () => void
   onOpenSettings: () => void
+  onOpenHelp: () => void
 }
 
 export default function Header(p: Props) {
@@ -234,6 +235,30 @@ export default function Header(p: Props) {
           </button>
         ))}
       </nav>
+
+      <button
+        onClick={p.onOpenHelp}
+        title="Aide — comment ça marche"
+        aria-label="Aide"
+        className="gf-help"
+        style={{
+          flex: 'none',
+          width: 36,
+          height: 36,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: '1px solid rgba(0,0,0,0.14)',
+          borderRadius: 8,
+          background: '#fff',
+          cursor: 'pointer',
+          fontSize: 16,
+          fontWeight: 700,
+          color: '#2f5d8a',
+        }}
+      >
+        ?
+      </button>
 
       <button
         onClick={p.onOpenSettings}

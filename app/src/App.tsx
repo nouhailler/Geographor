@@ -6,6 +6,7 @@ import Fiche, { type AiState } from './components/Fiche'
 import Legend from './components/Legend'
 import MapLegend from './components/MapLegend'
 import SettingsModal from './components/SettingsModal'
+import HelpModal from './components/HelpModal'
 import {
   fetchRegions,
   fetchDepartements,
@@ -72,6 +73,9 @@ export default function App() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [searchOpen, setSearchOpen] = useState(false)
 
+  // --- Aide ---
+  const [helpOpen, setHelpOpen] = useState(false)
+
   // --- Paramètres IA ---
   const [settingsOpen, setSettingsOpen] = useState(false)
   const settings = useSettings()
@@ -95,6 +99,24 @@ export default function App() {
   // Miroir d'état pour les actions stables (évite les closures périmées)
   const S = useRef({ regionSel, depSel, layers, depRegionMap })
   S.current = { regionSel, depSel, layers, depRegionMap }
+
+  // Ouvre l'aide automatiquement à la première visite
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem('gf_help_seen')) setHelpOpen(true)
+    } catch {
+      /* localStorage indisponible */
+    }
+  }, [])
+
+  const closeHelp = useCallback(() => {
+    setHelpOpen(false)
+    try {
+      localStorage.setItem('gf_help_seen', '1')
+    } catch {
+      /* ignore */
+    }
+  }, [])
 
   // Charge les listes admin au démarrage
   useEffect(() => {
@@ -304,12 +326,13 @@ export default function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
-      if (settingsOpen) setSettingsOpen(false)
+      if (helpOpen) closeHelp()
+      else if (settingsOpen) setSettingsOpen(false)
       else if (ficheRef) closeFiche()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [settingsOpen, ficheRef, closeFiche])
+  }, [helpOpen, settingsOpen, ficheRef, closeFiche, closeHelp])
 
   const onSummarize = useCallback(() => {
     if (!ficheModel) return
@@ -393,7 +416,10 @@ export default function App() {
         onBurger={toggleSide}
         onReset={() => actions.resetFrance()}
         onOpenSettings={() => setSettingsOpen(true)}
+        onOpenHelp={() => setHelpOpen(true)}
       />
+
+      {helpOpen && <HelpModal onClose={closeHelp} />}
 
       {settingsOpen && (
         <SettingsModal

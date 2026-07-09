@@ -151,6 +151,7 @@ input {
     max-width: none !important;
     min-width: 0;
   }
+  .gf-help,
   .gf-gear {
     order: 4;
   }
