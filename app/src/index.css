@@ -91,6 +91,12 @@ input {
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
 
+/* Hauteur pleine fiable sur mobile (évite le débordement dû à la barre du navigateur) */
+.gf-app {
+  height: 100vh; /* repli */
+  height: 100dvh;
+}
+
 /* ---- Responsive ≤900px : sidebar et fiche en overlay, burger visible ---- */
 @media (max-width: 900px) {
   .gf-side {
@@ -118,5 +124,40 @@ input {
   }
   .gf-tabs {
     gap: 2px !important;
+  }
+}
+
+/* ---- Responsive ≤640px (téléphones) : header sur deux lignes ---- */
+@media (max-width: 640px) {
+  .gf-header {
+    height: auto !important;
+    flex-wrap: wrap;
+    row-gap: 8px;
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+  /* Ligne 1 : burger, logo, recherche, roue — via l'ordre flex */
+  .gf-search {
+    order: 3;
+    max-width: none !important;
+    min-width: 0;
+  }
+  .gf-gear {
+    order: 4;
+  }
+  /* Ligne 2 : les onglets en pleine largeur */
+  .gf-tabs {
+    order: 5;
+    flex-basis: 100%;
+    margin-left: 0 !important;
+    gap: 6px !important;
+  }
+  .gf-tabs button {
+    flex: 1;
+    padding: 0 8px !important;
+  }
+  /* On masque le titre texte pour laisser respirer la recherche (le logo FR reste) */
+  .gf-brandtext {
+    display: none;
   }
 }

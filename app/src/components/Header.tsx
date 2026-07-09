@@ -48,6 +48,7 @@ export default function Header(p: Props) {
 
   return (
     <header
+      className="gf-header"
       style={{
         height: 58,
         flex: 'none',
@@ -103,7 +104,7 @@ export default function Header(p: Props) {
         >
           FR
         </div>
-        <div>
+        <div className="gf-brandtext">
           <div style={{ fontWeight: 700, fontSize: 15, lineHeight: 1.1 }}>Géographie de France</div>
           <div
             className="gf-brandsub"
@@ -120,7 +121,7 @@ export default function Header(p: Props) {
       </div>
 
       {/* Recherche */}
-      <div ref={wrapRef} style={{ flex: 1, maxWidth: 520, position: 'relative' }}>
+      <div ref={wrapRef} className="gf-search" style={{ flex: 1, maxWidth: 520, position: 'relative' }}>
         <input
           value={p.searchQ}
           onChange={(e) => p.onSearchChange(e.target.value)}
@@ -237,6 +238,7 @@ export default function Header(p: Props) {
       <button
         onClick={p.onOpenSettings}
         title="Paramètres IA"
+        className="gf-gear"
         style={{
           flex: 'none',
           width: 36,
