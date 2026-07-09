@@ -61,15 +61,16 @@ const TILES: Record<BaseMap, { url: string; attribution: string; maxZoom: number
 // (comme prévu au design), transparent sur satellite et léger sur topo pour
 // laisser voir l'imagerie/le relief au lieu de « griser » toute la France.
 function regionFillOpacity(base: BaseMap): number {
-  return base === 'sat' ? 0 : base === 'topo' ? 0.18 : 0.72
+  // Teinte légère seulement : le fond de carte (rues, noms) doit rester lisible.
+  return base === 'sat' ? 0 : base === 'topo' ? 0.1 : 0.14
 }
 function regionStyle(base: BaseMap): L.PathOptions {
   return { color: '#7d97ab', weight: 1.2, fillColor: '#dfe8ef', fillOpacity: regionFillOpacity(base) }
 }
 function depFillOpacity(base: BaseMap, selected: boolean): number {
   if (base === 'sat') return selected ? 0.3 : 0
-  if (base === 'topo') return selected ? 0.4 : 0.1
-  return selected ? 0.55 : 0.28
+  if (base === 'topo') return selected ? 0.35 : 0.08
+  return selected ? 0.45 : 0.12
 }
 function depStyle(base: BaseMap, selected: boolean): L.PathOptions {
   return {
