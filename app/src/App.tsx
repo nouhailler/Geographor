@@ -273,6 +273,17 @@ export default function App() {
     setAi({ status: 'idle' })
   }, [ficheRef])
 
+  // Échap : ferme le modal puis la fiche (retour à la carte)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      if (settingsOpen) setSettingsOpen(false)
+      else if (ficheRef) closeFiche()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [settingsOpen, ficheRef, closeFiche])
+
   const onSummarize = useCallback(() => {
     if (!ficheModel) return
     if (!settings.apiKey || !settings.selectedModel) {

@@ -56,11 +56,18 @@ export default function SettingsModal(p: Props) {
             gap: 10,
             padding: '16px 18px',
             borderBottom: '1px solid rgba(0,0,0,0.08)',
+            position: 'sticky',
+            top: 0,
+            background: '#fdfdfc',
+            zIndex: 1,
           }}
         >
           <div style={{ fontSize: 15, fontWeight: 700 }}>Paramètres IA</div>
           <button
             onClick={p.onClose}
+            className="gf-modal-close"
+            aria-label="Fermer"
+            title="Fermer"
             style={{
               marginLeft: 'auto',
               width: 28,

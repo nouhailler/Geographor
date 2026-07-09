@@ -108,6 +108,9 @@ export default function Fiche({
         )}
         <button
           onClick={onClose}
+          className="gf-fiche-close"
+          aria-label="Fermer et revenir à la carte"
+          title="Fermer et revenir à la carte"
           style={{
             marginLeft: 'auto',
             width: 28,

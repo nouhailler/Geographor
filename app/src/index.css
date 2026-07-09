@@ -99,12 +99,15 @@ input {
 
 /* ---- Responsive ≤900px : sidebar et fiche en overlay, burger visible ---- */
 @media (max-width: 900px) {
+  /* z-index au-dessus des contrôles Leaflet (z-index 1000) pour que la sidebar
+     et surtout le bouton ✕ de la fiche restent cliquables (bug : le zoom Leaflet
+     recouvrait le bouton de fermeture). */
   .gf-side {
     position: absolute !important;
     left: 0;
     top: 0;
     bottom: 0;
-    z-index: 800;
+    z-index: 1040;
     box-shadow: 0 0 24px rgba(0, 0, 0, 0.18);
   }
   .gf-fiche {
@@ -112,9 +115,15 @@ input {
     right: 0;
     top: 0;
     bottom: 0;
-    z-index: 900;
+    z-index: 1050;
     width: min(400px, 94vw) !important;
     box-shadow: 0 0 28px rgba(0, 0, 0, 0.22);
+  }
+  /* Cible tactile de fermeture plus confortable en mobile */
+  .gf-fiche-close,
+  .gf-modal-close {
+    width: 34px !important;
+    height: 34px !important;
   }
   .gf-burger {
     display: flex !important;
