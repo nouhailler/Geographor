@@ -1,0 +1,20 @@
+# Configuration Netlify — l'application vit dans le sous-répertoire app/
+[build]
+  base = "app"
+  command = "npm run build"
+  publish = "dist"            # relatif à `base` → app/dist
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# PWA / SPA : sert index.html pour toute route inconnue (sécurité si des routes sont ajoutées).
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Le service worker ne doit jamais être mis en cache par le CDN (mises à jour immédiates).
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
