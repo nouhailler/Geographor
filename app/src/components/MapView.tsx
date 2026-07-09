@@ -36,6 +36,7 @@ interface Props {
   onRegionFeatureClick: (code: string) => void
   onDepFeatureClick: (code: string) => void
   onVilleClick: (nom: string, lat: number, lng: number, pop: number) => void
+  onMapClick: () => void
 }
 
 const TILES: Record<BaseMap, { url: string; attribution: string; maxZoom: number }> = {
@@ -88,6 +89,8 @@ const MapView = forwardRef<MapHandle, Props>(function MapView(props, ref) {
     map.attributionControl.setPrefix(false)
     L.control.zoom({ position: 'topright' }).addTo(map)
     map.setView([46.5, 2.6], 6)
+    // Tout tap sur la carte (zone vide ou entité) notifie App (ferme la sidebar en mobile)
+    map.on('click', () => propsRef.current.onMapClick())
     mapRef.current = map
 
     setTile(props.base)

@@ -217,11 +217,23 @@ export default function App() {
   )
 
   // --- Onglets / thématiques ---
+  // En mobile, l'onglet agit comme un panneau bascule : recliquer l'onglet actif
+  // referme la sidebar ; changer d'onglet l'ouvre sur le nouveau contenu.
+  const tabRef = useRef(tab)
+  tabRef.current = tab
   const onTab = useCallback((id: TabId) => {
+    if (window.innerWidth <= 900) {
+      setSideDisplay((disp) => (disp === 'flex' && id === tabRef.current ? 'none' : 'flex'))
+    }
     setTab(id)
     if (id === 'phys') {
       setLayers((prev) => ({ ...prev, fleuves: true, sommets: true, parcs: true, lacs: true }))
     }
+  }, [])
+
+  // Tap sur la carte : ferme la sidebar en mobile (jamais sur desktop où elle est permanente)
+  const onMapClick = useCallback(() => {
+    if (window.innerWidth <= 900) setSideDisplay((d) => (d === 'flex' ? 'none' : d))
   }, [])
 
   const onToggleLayer = useCallback((k: LayerKey) => {
@@ -412,6 +424,7 @@ export default function App() {
             onRegionFeatureClick={onRegionFeatureClick}
             onDepFeatureClick={onDepFeatureClick}
             onVilleClick={onVilleClick}
+            onMapClick={onMapClick}
           />
 
           {loading && (
