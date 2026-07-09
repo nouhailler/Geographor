@@ -57,11 +57,27 @@ const TILES: Record<BaseMap, { url: string; attribution: string; maxZoom: number
   },
 }
 
-const REGION_STYLE: L.PathOptions = {
-  color: '#7d97ab',
-  weight: 1.2,
-  fillColor: '#dfe8ef',
-  fillOpacity: 0.72,
+// Le remplissage vectoriel s'adapte au fond de carte : opaque sur le plan clair
+// (comme prévu au design), transparent sur satellite et léger sur topo pour
+// laisser voir l'imagerie/le relief au lieu de « griser » toute la France.
+function regionFillOpacity(base: BaseMap): number {
+  return base === 'sat' ? 0 : base === 'topo' ? 0.18 : 0.72
+}
+function regionStyle(base: BaseMap): L.PathOptions {
+  return { color: '#7d97ab', weight: 1.2, fillColor: '#dfe8ef', fillOpacity: regionFillOpacity(base) }
+}
+function depFillOpacity(base: BaseMap, selected: boolean): number {
+  if (base === 'sat') return selected ? 0.3 : 0
+  if (base === 'topo') return selected ? 0.4 : 0.1
+  return selected ? 0.55 : 0.28
+}
+function depStyle(base: BaseMap, selected: boolean): L.PathOptions {
+  return {
+    color: '#5c7d99',
+    weight: 1,
+    fillColor: selected ? '#f3d9b0' : '#ffffff',
+    fillOpacity: depFillOpacity(base, selected),
+  }
 }
 
 const MapView = forwardRef<MapHandle, Props>(function MapView(props, ref) {
@@ -104,16 +120,16 @@ const MapView = forwardRef<MapHandle, Props>(function MapView(props, ref) {
       .then(([rg, dp]: [GeoJSON.FeatureCollection, GeoJSON.FeatureCollection]) => {
         depGeoRef.current = dp
         regionLayerRef.current = L.geoJSON(rg, {
-          style: () => REGION_STYLE,
+          style: () => regionStyle(propsRef.current.base),
           onEachFeature: (f, ly) => {
             const code = (f.properties as { code: string }).code
             const nom = (f.properties as { nom: string }).nom
             ly.bindTooltip(nom, { sticky: true })
             ly.on('mouseover', () => {
-              if (!propsRef.current.themeMetric) (ly as L.Path).setStyle({ fillColor: '#cfdde9' })
+              if (!propsRef.current.themeMetric) (ly as L.Path).setStyle({ fillColor: '#cfdde9', fillOpacity: 0.5 })
             })
             ly.on('mouseout', () => {
-              if (!propsRef.current.themeMetric) (ly as L.Path).setStyle(REGION_STYLE)
+              if (!propsRef.current.themeMetric) (ly as L.Path).setStyle(regionStyle(propsRef.current.base))
             })
             ly.on('click', () => propsRef.current.onRegionFeatureClick(code))
           },
@@ -130,9 +146,13 @@ const MapView = forwardRef<MapHandle, Props>(function MapView(props, ref) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // ---------- Sync base tiles ----------
+  // ---------- Sync base tiles + style vecteur dépendant du fond ----------
   useEffect(() => {
     setTile(props.base)
+    if (regionLayerRef.current && !props.themeMetric) {
+      regionLayerRef.current.setStyle(() => regionStyle(props.base))
+    }
+    restyleDeps(props.base)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.base])
 
@@ -282,7 +302,7 @@ const MapView = forwardRef<MapHandle, Props>(function MapView(props, ref) {
     const layer = regionLayerRef.current
     if (!layer) return
     if (!metric) {
-      layer.setStyle(() => REGION_STYLE)
+      layer.setStyle(() => regionStyle(propsRef.current.base))
       return
     }
     const scale = buildThemeScale(metric)
@@ -302,16 +322,16 @@ const MapView = forwardRef<MapHandle, Props>(function MapView(props, ref) {
     const depReg = propsRef.current.depRegionMap
     depLayerRef.current = L.geoJSON(geo, {
       filter: (f) => depReg.get((f.properties as { code: string }).code) === codeRegion,
-      style: () => ({ color: '#5c7d99', weight: 1, fillColor: '#ffffff', fillOpacity: 0.28 }),
+      style: () => depStyle(propsRef.current.base, false),
       onEachFeature: (f, ly) => {
         const code = (f.properties as { code: string }).code
         const nom = (f.properties as { nom: string }).nom
         ly.bindTooltip(code + ' · ' + nom, { sticky: true })
-        ly.on('mouseover', () => (ly as L.Path).setStyle({ fillOpacity: 0.5 }))
+        ly.on('mouseover', () =>
+          (ly as L.Path).setStyle({ fillColor: '#e8eef3', fillOpacity: 0.5 }),
+        )
         ly.on('mouseout', () =>
-          (ly as L.Path).setStyle({
-            fillOpacity: propsRef.current.selectedDep === code ? 0.55 : 0.28,
-          }),
+          (ly as L.Path).setStyle(depStyle(propsRef.current.base, propsRef.current.selectedDep === code)),
         )
         ly.on('click', () => propsRef.current.onDepFeatureClick(code))
       },
@@ -319,12 +339,19 @@ const MapView = forwardRef<MapHandle, Props>(function MapView(props, ref) {
   }
 
   function styleSelectedDep(code: string) {
+    const base = propsRef.current.base
     depLayerRef.current?.eachLayer((l2) => {
       const c = (((l2 as L.GeoJSON).feature as GeoJSON.Feature).properties as { code: string }).code
-      ;(l2 as L.Path).setStyle({
-        fillColor: c === code ? '#f3d9b0' : '#ffffff',
-        fillOpacity: c === code ? 0.55 : 0.28,
-      })
+      ;(l2 as L.Path).setStyle(depStyle(base, c === code))
+    })
+  }
+
+  // Ré-applique le style des départements pour le fond de carte courant
+  function restyleDeps(base: BaseMap) {
+    const sel = propsRef.current.selectedDep
+    depLayerRef.current?.eachLayer((l2) => {
+      const c = (((l2 as L.GeoJSON).feature as GeoJSON.Feature).properties as { code: string }).code
+      ;(l2 as L.Path).setStyle(depStyle(base, c === sel))
     })
   }
 

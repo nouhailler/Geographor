@@ -59,6 +59,7 @@ const hoverBg = {
 const ADMIN_LAYERS: [LayerKey, string][] = [
   ['prefs', 'Préfectures'],
   ['villes', 'Grandes villes'],
+  ['communes', 'Communes (du département)'],
 ]
 const NATURE_LAYERS: [LayerKey, string][] = [
   ['fleuves', 'Fleuves'],

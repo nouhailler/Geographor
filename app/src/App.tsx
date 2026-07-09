@@ -22,6 +22,7 @@ import { buildFicheModel } from './lib/fiche'
 import { useSettings } from './state/useSettings'
 import type { NavActions } from './state/actions'
 import type {
+  ApiCommune,
   ApiDepartement,
   ApiRegion,
   BaseMap,
@@ -34,9 +35,12 @@ import type {
   TabId,
 } from './types'
 
+// Rien de coché par défaut (hors « communes » qui ne concerne qu'un département
+// une fois sélectionné). L'utilisateur active les repères qu'il souhaite.
 const INITIAL_LAYERS: LayerState = {
   prefs: false,
-  villes: true,
+  villes: false,
+  communes: true,
   fleuves: false,
   sommets: false,
   parcs: false,
@@ -77,6 +81,7 @@ export default function App() {
   const aiCanUse = !!settings.apiKey && !!settings.selectedModel
 
   const mapRef = useRef<MapHandle>(null)
+  const communesRef = useRef<ApiCommune[]>([])
   const staticIndexRef = useRef<IndexEntry[]>([])
   const searchSeq = useRef(0)
   const mediaSeq = useRef(0)
@@ -114,14 +119,17 @@ export default function App() {
     setCommuneMedia(null)
   }, [])
 
-  // Charge les communes d'un département (marqueurs + stats agrégées réelles)
+  // Charge les communes d'un département (marqueurs + stats agrégées réelles).
+  // Les marqueurs ne s'affichent que si le calque « communes » est actif.
   const loadCommunesOfDep = useCallback((code: string) => {
     const seq = ++depAggSeq.current
     setDepAgg(null)
     fetchCommunesOfDep(code)
       .then((list) => {
         if (seq !== depAggSeq.current) return
-        mapRef.current?.setCommuneMarkers(list)
+        communesRef.current = list
+        if (S.current.layers.communes) mapRef.current?.setCommuneMarkers(list)
+        else mapRef.current?.clearCommuneMarkers()
         setDepAgg(aggregateDep(list))
       })
       .catch(() => {
@@ -227,9 +235,6 @@ export default function App() {
       setSideDisplay((disp) => (disp === 'flex' && id === tabRef.current ? 'none' : 'flex'))
     }
     setTab(id)
-    if (id === 'phys') {
-      setLayers((prev) => ({ ...prev, fleuves: true, sommets: true, parcs: true, lacs: true }))
-    }
   }, [])
 
   // Tap sur la carte : ferme la sidebar en mobile (jamais sur desktop où elle est permanente)
@@ -238,8 +243,17 @@ export default function App() {
   }, [])
 
   const onToggleLayer = useCallback((k: LayerKey) => {
-    setLayers((prev) => ({ ...prev, [k]: !prev[k] }))
-  }, [])
+    setLayers((prev) => {
+      const next = { ...prev, [k]: !prev[k] }
+      // Les marqueurs communes sont gérés impérativement (chargés par département)
+      if (k === 'communes') {
+        if (next.communes && depSel && communesRef.current.length)
+          mapRef.current?.setCommuneMarkers(communesRef.current)
+        else if (!next.communes) mapRef.current?.clearCommuneMarkers()
+      }
+      return next
+    })
+  }, [depSel])
 
   const onSetBase = useCallback((b: BaseMap) => setBase(b), [])
 

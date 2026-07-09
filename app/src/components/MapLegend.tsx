@@ -73,7 +73,7 @@ export default function MapLegend({ layers, depSelected }: Props) {
       ),
       label: 'Communes',
       desc: "Ronds verts — les villes d'un département, affichées après sélection.",
-      active: depSelected,
+      active: layers.communes && depSelected,
     },
     {
       key: 'prefs',

@@ -4,7 +4,7 @@ export type TabId = 'carte' | 'theme' | 'phys'
 export type BaseMap = 'plan' | 'topo' | 'sat'
 export type EntityKind = 'region' | 'dep' | 'commune' | 'lieu'
 
-export type LayerKey = 'prefs' | 'villes' | 'fleuves' | 'sommets' | 'parcs' | 'lacs'
+export type LayerKey = 'prefs' | 'villes' | 'communes' | 'fleuves' | 'sommets' | 'parcs' | 'lacs'
 export type LayerState = Record<LayerKey, boolean>
 
 /** Données administratives issues de geo.api.gouv.fr */
