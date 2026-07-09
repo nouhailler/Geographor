@@ -4,6 +4,7 @@ import Sidebar, { type Crumb } from './components/Sidebar'
 import MapView, { type MapHandle } from './components/MapView'
 import Fiche, { type AiState } from './components/Fiche'
 import Legend from './components/Legend'
+import MapLegend from './components/MapLegend'
 import SettingsModal from './components/SettingsModal'
 import {
   fetchRegions,
@@ -457,6 +458,7 @@ export default function App() {
           )}
 
           {legend && tab === 'theme' && <Legend legend={legend} />}
+          {tab !== 'theme' && <MapLegend layers={layers} depSelected={!!depSel} />}
         </main>
 
         {ficheModel && (
