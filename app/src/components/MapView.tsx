@@ -61,16 +61,18 @@ const TILES: Record<BaseMap, { url: string; attribution: string; maxZoom: number
 // (comme prévu au design), transparent sur satellite et léger sur topo pour
 // laisser voir l'imagerie/le relief au lieu de « griser » toute la France.
 function regionFillOpacity(base: BaseMap): number {
-  // Teinte légère seulement : le fond de carte (rues, noms) doit rester lisible.
-  return base === 'sat' ? 0 : base === 'topo' ? 0.1 : 0.14
+  // Plan & satellite : aucun remplissage (seulement le contour), pour ne rien
+  // masquer du fond de carte. Topo : teinte très légère (le relief reste lisible).
+  return base === 'topo' ? 0.1 : 0
 }
 function regionStyle(base: BaseMap): L.PathOptions {
   return { color: '#7d97ab', weight: 1.2, fillColor: '#dfe8ef', fillOpacity: regionFillOpacity(base) }
 }
 function depFillOpacity(base: BaseMap, selected: boolean): number {
-  if (base === 'sat') return selected ? 0.3 : 0
-  if (base === 'topo') return selected ? 0.35 : 0.08
-  return selected ? 0.45 : 0.12
+  // Non sélectionné : pas de remplissage (contour seul). Sélectionné : surligné
+  // pour rester bien identifiable quel que soit le fond.
+  if (selected) return base === 'sat' ? 0.3 : base === 'topo' ? 0.35 : 0.45
+  return base === 'topo' ? 0.08 : 0
 }
 function depStyle(base: BaseMap, selected: boolean): L.PathOptions {
   return {
@@ -127,7 +129,7 @@ const MapView = forwardRef<MapHandle, Props>(function MapView(props, ref) {
             const nom = (f.properties as { nom: string }).nom
             ly.bindTooltip(nom, { sticky: true })
             ly.on('mouseover', () => {
-              if (!propsRef.current.themeMetric) (ly as L.Path).setStyle({ fillColor: '#cfdde9', fillOpacity: 0.5 })
+              if (!propsRef.current.themeMetric) (ly as L.Path).setStyle({ fillColor: '#cfdde9', fillOpacity: 0.35 })
             })
             ly.on('mouseout', () => {
               if (!propsRef.current.themeMetric) (ly as L.Path).setStyle(regionStyle(propsRef.current.base))
