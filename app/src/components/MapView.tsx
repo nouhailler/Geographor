@@ -41,8 +41,10 @@ interface Props {
 
 const TILES: Record<BaseMap, { url: string; attribution: string; maxZoom: number }> = {
   plan: {
-    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-    attribution: '© OpenStreetMap · © CARTO',
+    // Plan IGN v2 (Géoplateforme) : cartographie officielle française, libellés
+    // 100 % en français (contrairement à CARTO qui nomme les pays/mers en anglais).
+    url: 'https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&TILEMATRIXSET=PM&FORMAT=image/png&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
+    attribution: '© IGN · Géoplateforme',
     maxZoom: 19,
   },
   topo: {
