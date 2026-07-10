@@ -58,7 +58,13 @@ const SECTIONS: Section[] = [
   },
 ]
 
-export default function HelpModal({ onClose }: { onClose: () => void }) {
+interface HelpProps {
+  onClose: () => void
+  onStartTour: () => void
+  onStartDemo: () => void
+}
+
+export default function HelpModal({ onClose, onStartTour, onStartDemo }: HelpProps) {
   return (
     <div
       onClick={onClose}
@@ -126,6 +132,43 @@ export default function HelpModal({ onClose }: { onClose: () => void }) {
           <div style={{ fontSize: 12.5, color: 'rgba(34,38,42,0.65)', lineHeight: 1.5 }}>
             Un atlas interactif de la France. Voici où cliquer pour faire apparaître ou masquer les
             informations.
+          </div>
+
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={onStartDemo}
+              style={{
+                flex: 1,
+                height: 40,
+                border: 'none',
+                borderRadius: 8,
+                background: '#2f5d8a',
+                color: '#fff',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontSize: 12.5,
+                fontWeight: 600,
+              }}
+            >
+              🎬 Lancer la démo
+            </button>
+            <button
+              onClick={onStartTour}
+              style={{
+                flex: 1,
+                height: 40,
+                border: '1px solid #2f5d8a',
+                borderRadius: 8,
+                background: '#fff',
+                color: '#2f5d8a',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                fontSize: 12.5,
+                fontWeight: 600,
+              }}
+            >
+              🧭 Visite guidée
+            </button>
           </div>
 
           {SECTIONS.map((s) => (

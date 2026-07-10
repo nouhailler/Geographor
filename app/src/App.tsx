@@ -7,6 +7,9 @@ import Legend from './components/Legend'
 import MapLegend from './components/MapLegend'
 import SettingsModal from './components/SettingsModal'
 import HelpModal from './components/HelpModal'
+import Welcome from './components/Welcome'
+import GuidedTour from './components/GuidedTour'
+import DemoMode, { type DemoControls } from './components/DemoMode'
 import {
   fetchRegions,
   fetchDepartements,
@@ -14,6 +17,7 @@ import {
   searchCommunes,
   aggregateDep,
   communeLatLng,
+  fetchCommune,
 } from './api/geo'
 import { fetchCommuneMedia } from './api/media'
 import { summarizeFiche, buildFichePrompt } from './api/ai'
@@ -73,8 +77,11 @@ export default function App() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [searchOpen, setSearchOpen] = useState(false)
 
-  // --- Aide ---
+  // --- Aide & onboarding ---
+  const [welcomeOpen, setWelcomeOpen] = useState(false)
   const [helpOpen, setHelpOpen] = useState(false)
+  const [tourOpen, setTourOpen] = useState(false)
+  const [demoOpen, setDemoOpen] = useState(false)
 
   // --- Paramètres IA ---
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -100,23 +107,44 @@ export default function App() {
   const S = useRef({ regionSel, depSel, layers, depRegionMap })
   S.current = { regionSel, depSel, layers, depRegionMap }
 
-  // Ouvre l'aide automatiquement à la première visite
+  // Ouvre l'écran d'accueil (onboarding) automatiquement à la première visite
   useEffect(() => {
     try {
-      if (!localStorage.getItem('gf_help_seen')) setHelpOpen(true)
+      if (!localStorage.getItem('gf_onboarded')) setWelcomeOpen(true)
     } catch {
       /* localStorage indisponible */
     }
   }, [])
 
-  const closeHelp = useCallback(() => {
-    setHelpOpen(false)
+  const markOnboarded = useCallback(() => {
     try {
-      localStorage.setItem('gf_help_seen', '1')
+      localStorage.setItem('gf_onboarded', '1')
     } catch {
       /* ignore */
     }
   }, [])
+
+  // Ferme l'accueil (et mémorise le passage) ; ouvre optionnellement une suite.
+  const closeWelcome = useCallback(() => {
+    setWelcomeOpen(false)
+    markOnboarded()
+  }, [markOnboarded])
+
+  const startTour = useCallback(() => {
+    setWelcomeOpen(false)
+    setHelpOpen(false)
+    setDemoOpen(false)
+    markOnboarded()
+    setTourOpen(true)
+  }, [markOnboarded])
+
+  const startDemo = useCallback(() => {
+    setWelcomeOpen(false)
+    setHelpOpen(false)
+    setTourOpen(false)
+    markOnboarded()
+    setDemoOpen(true)
+  }, [markOnboarded])
 
   // Charge les listes admin au démarrage
   useEffect(() => {
@@ -212,6 +240,31 @@ export default function App() {
     }
     return a
   }, [openFiche, closeFiche, loadCommunesOfDep])
+
+  // Ouvre une fiche commune à partir de son nom (utilisé par le mode démo).
+  const openCommuneByName = useCallback(
+    async (name: string) => {
+      const found = await searchCommunes(name, 1)
+      const c = found[0] ?? (await fetchCommune('75056')) // repli : Paris
+      if (c) actions.openCommune(c)
+    },
+    [actions],
+  )
+
+  // Contrôles exposés au mode démo (mêmes actions que l'interface réelle).
+  const demoControls = useMemo<DemoControls>(
+    () => ({
+      reset: () => actions.resetFrance(),
+      selectRegion: (code) => actions.selectRegion(code),
+      selectDep: (code) => actions.selectDep(code),
+      ensureLayer: (k) => actions.ensureLayer(k),
+      setTab,
+      setMetric,
+      setBase,
+      openCommuneByName,
+    }),
+    [actions, openCommuneByName],
+  )
 
   // Construit l'index de recherche dès que les départements sont chargés
   useEffect(() => {
@@ -322,17 +375,20 @@ export default function App() {
     setAi({ status: 'idle' })
   }, [ficheRef])
 
-  // Échap : ferme le modal puis la fiche (retour à la carte)
+  // Échap : ferme le modal puis la fiche (retour à la carte).
+  // La visite guidée et le mode démo gèrent Échap eux-mêmes.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
-      if (helpOpen) closeHelp()
+      if (tourOpen || demoOpen) return
+      if (welcomeOpen) closeWelcome()
+      else if (helpOpen) setHelpOpen(false)
       else if (settingsOpen) setSettingsOpen(false)
       else if (ficheRef) closeFiche()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [helpOpen, settingsOpen, ficheRef, closeFiche, closeHelp])
+  }, [welcomeOpen, helpOpen, tourOpen, demoOpen, settingsOpen, ficheRef, closeFiche, closeWelcome])
 
   const onSummarize = useCallback(() => {
     if (!ficheModel) return
@@ -416,10 +472,34 @@ export default function App() {
         onBurger={toggleSide}
         onReset={() => actions.resetFrance()}
         onOpenSettings={() => setSettingsOpen(true)}
-        onOpenHelp={() => setHelpOpen(true)}
+        onOpenHelp={() => setWelcomeOpen(true)}
       />
 
-      {helpOpen && <HelpModal onClose={closeHelp} />}
+      {welcomeOpen && (
+        <Welcome
+          onStartTour={startTour}
+          onStartDemo={startDemo}
+          onExplore={closeWelcome}
+          onOpenHelp={() => {
+            setWelcomeOpen(false)
+            markOnboarded()
+            setHelpOpen(true)
+          }}
+          onClose={closeWelcome}
+        />
+      )}
+
+      {helpOpen && (
+        <HelpModal
+          onClose={() => setHelpOpen(false)}
+          onStartTour={startTour}
+          onStartDemo={startDemo}
+        />
+      )}
+
+      {tourOpen && <GuidedTour onClose={() => setTourOpen(false)} />}
+
+      {demoOpen && <DemoMode controls={demoControls} onExit={() => setDemoOpen(false)} />}
 
       {settingsOpen && (
         <SettingsModal
@@ -452,7 +532,7 @@ export default function App() {
           actions={actions}
         />
 
-        <main style={{ flex: 1, position: 'relative', minWidth: 0 }}>
+        <main data-tour="map" style={{ flex: 1, position: 'relative', minWidth: 0 }}>
           <MapView
             ref={mapRef}
             actions={actions}

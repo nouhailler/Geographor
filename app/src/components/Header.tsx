@@ -122,7 +122,12 @@ export default function Header(p: Props) {
       </div>
 
       {/* Recherche */}
-      <div ref={wrapRef} className="gf-search" style={{ flex: 1, maxWidth: 520, position: 'relative' }}>
+      <div
+        ref={wrapRef}
+        data-tour="search"
+        className="gf-search"
+        style={{ flex: 1, maxWidth: 520, position: 'relative' }}
+      >
         <input
           value={p.searchQ}
           onChange={(e) => p.onSearchChange(e.target.value)}
@@ -228,7 +233,11 @@ export default function Header(p: Props) {
         )}
       </div>
 
-      <nav className="gf-tabs" style={{ display: 'flex', gap: 6, marginLeft: 'auto', flex: 'none' }}>
+      <nav
+        className="gf-tabs"
+        data-tour="tabs"
+        style={{ display: 'flex', gap: 6, marginLeft: 'auto', flex: 'none' }}
+      >
         {TAB_DEFS.map(([id, label]) => (
           <button key={id} onClick={() => p.onTab(id)} style={tabStyle(p.tab === id)}>
             {label}
@@ -240,6 +249,7 @@ export default function Header(p: Props) {
         onClick={p.onOpenHelp}
         title="Aide — comment ça marche"
         aria-label="Aide"
+        data-tour="help"
         className="gf-help"
         style={{
           flex: 'none',

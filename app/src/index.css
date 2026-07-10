@@ -84,6 +84,15 @@ input {
     transform: rotate(360deg);
   }
 }
+/* Mode démo : barre de progression de l'étape courante */
+@keyframes gfDemoBar {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
 
 /* Scrollbars discrètes */
 .gf-scroll {
